@@ -1,0 +1,110 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'tools/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      APP_VERSION: 1.0.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install packages
+        run: npm install --no-audit --no-fund
+
+      - name: Prepare web app (runtime, version)
+        run: node scripts/prepare-web.mjs
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Customize Android project
+        run: bash scripts/patch-android.sh
+
+      - name: Sync web app into Android
+        run: npx cap sync android
+
+      - name: Signing key
+        id: key
+        env:
+          CHOVOTAI_KEY_PASS: ${{ secrets.CHOVOTAI_KEY_PASS }}
+        run: |
+          if [ -z "$CHOVOTAI_KEY_PASS" ]; then
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Secret CHOVOTAI_KEY_PASS is missing, building a test APK only"
+          else
+            cp signing/release.jks android/app/release.jks
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build APK
+        working-directory: android
+        env:
+          CHOVOTAI_STORE_PASSWORD: ${{ secrets.CHOVOTAI_KEY_PASS }}
+          CHOVOTAI_KEY_PASSWORD: ${{ secrets.CHOVOTAI_KEY_PASS }}
+          CHOVOTAI_KEY_ALIAS: chovotai
+          SIGNED: ${{ steps.key.outputs.signed }}
+        run: |
+          chmod +x gradlew
+          if [ "$SIGNED" = "true" ]; then
+            ./gradlew assembleRelease --no-daemon --stacktrace
+            cp app/build/outputs/apk/release/app-release.apk ../chovotai.apk
+          else
+            ./gradlew assembleDebug --no-daemon --stacktrace
+            cp app/build/outputs/apk/debug/app-debug.apk ../chovotai.apk
+          fi
+
+      - name: Verify APK
+        run: |
+          ls -la chovotai.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs chovotai.apk | head -5 || true
+          "$BT/aapt" dump badging chovotai.apk 2>/dev/null | grep -E "package|sdkVersion|targetSdk|application-label" | head -6 || true
+          unzip -l chovotai.apk | grep -E "assets/public/(index.html|app.js|lib/pdfjs/pdf.min.mjs|lib/pdfjs/pdf.worker.min.mjs|fonts/heebo.ttf|cap-runtime.js)"
+
+      - name: Keep APK as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chovotai-apk
+          path: chovotai.apk
+          retention-days: 14
+
+      - name: Publish release
+        if: steps.key.outputs.signed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${APP_VERSION}"
+          NOTES=$'חובותיי — גרסה '"${APP_VERSION}"$'\n\nלהתקנה: הורידו את chovotai.apk בטלפון ופתחו אותו. בהתקנה הראשונה יש לאשר "התקנה ממקור לא ידוע".\nעדכון: מתקינים את הקובץ החדש מעל הקיים. הנתונים והספרים נשמרים.'
+          gh release create "$TAG" chovotai.apk --title "חובותיי ${APP_VERSION}" --notes "$NOTES" --latest
+
+      - name: Missing signing password
+        if: steps.key.outputs.signed != 'true'
+        run: |
+          echo "::error::Test build passed, but the APK was not published: add the secret CHOVOTAI_KEY_PASS"
+          exit 1
