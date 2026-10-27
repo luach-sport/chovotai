@@ -14,6 +14,8 @@
   const FREQ_LABEL = { daily: 'כל יום', days: 'ימים קבועים', interval: 'כל כמה ימים', weekly: 'בשבוע', monthly: 'בחודש' };
   const COLORS = ['#1E7A8C', '#4C56B0', '#8A4FA0', '#C2456A', '#C2791A', '#5F8A2A', '#2E8B5E', '#5C6B7A'];
   const OB_ICONS = ['book', 'scroll', 'headphones', 'star', 'flame', 'heart', 'sun', 'moon', 'pen', 'candle', 'target', 'layers'];
+  // Small feature files loaded after this one (share-app.js) add their sheets and buttons here.
+  const EXT = { sheets: {}, actions: {} };
   const SPEEDS = [0.8, 1, 1.25, 1.5, 1.75, 2];
   const ZOOMS = [1, 1.35, 1.75, 2.25, 3];
 
@@ -120,6 +122,9 @@
     hash: '<path d="M4 9h16"/><path d="M4 15h16"/><path d="M10 3 8 21"/><path d="M16 3l-2 18"/>',
     bookmark: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
     info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98"/><path d="m15.41 6.51-6.82 3.98"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
     shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>'
   };
   function svg(name, size, sw) {
@@ -1159,7 +1164,10 @@
       '<button type="button" class="row link" data-action="backup"><span class="rl"><b>גיבוי לקובץ</b><small>החובות, הסימונים וההגדרות (בלי הספרים עצמם)</small></span><span class="ri">' + svg('download', 18) + '</span></button>' +
       '<button type="button" class="row link" data-action="restore"><span class="rl"><b>שחזור מגיבוי</b></span><span class="ri">' + svg('upload', 18) + '</span></button>' +
       '<button type="button" class="row link" data-action="reset"><span class="rl"><b style="color:var(--danger)">מחיקת כל הסימונים</b><small>החובות והספרים יישארו</small></span><span class="ri">' + svg('trash', 18) + '</span></button></div>';
-    h += '<p class="version">חובותיי · גרסה ' + APP_VERSION + '<br>עובדת בלי אינטרנט. שום מידע לא יוצא מהטלפון.</p>';
+    // sharing the app with friends (share-app.js)
+    h += '<div class="group-title">שיתוף</div><div class="group">' +
+      '<button type="button" class="row link" data-action="share-app"><span class="rl"><b>שיתוף האפליקציה</b><small>לשלוח לחברים קישור לאתר של חובותיי, או את האפליקציה עצמה כקובץ</small></span><span class="ri">' + svg('share', 18) + '</span></button></div>';
+    h += '<p class="version">חובותיי · גרסה ' + APP_VERSION + '<br>עובדת בלי אינטרנט. שום מידע לא יוצא מהטלפון.<br>פותח על ידי <b>Itzko</b></p>';
     return h;
   }
 
@@ -1208,6 +1216,7 @@
       const c = ui.confirm || {};
       return '<h3>' + esc(c.title) + '</h3><p class="lead">' + esc(c.text) + '</p><div class="btn-row"><button type="button" class="btn ' + (c.danger ? 'danger' : 'primary') + '" data-action="confirm-ok">' + esc(c.ok || 'אישור') + '</button><button type="button" class="btn" data-action="sheet-close">ביטול</button></div>';
     }
+    if (EXT.sheets[s.type]) return EXT.sheets[s.type](s);
     return null;
   }
 
@@ -2541,7 +2550,8 @@
   function onClick(e) {
     const el = e.target.closest ? e.target.closest('[data-action]') : null;
     if (!el || el.disabled) return;
-    const fn = ACTIONS[el.getAttribute('data-action')];
+    const name = el.getAttribute('data-action');
+    const fn = ACTIONS[name] || EXT.actions[name];
     if (!fn) return;
     e.preventDefault();
     try { fn(el, e); } catch (err) { console.error(err); }
@@ -2686,7 +2696,9 @@
     ui: ui, info: info, dayPlan: dayPlan, dayScore: dayScore, streak: streak, bestStreak: bestStreak, rate: rate,
     buildSchedule: (now) => buildSchedule(now), complete: complete, uncomplete: uncomplete, assignment: assignment,
     normalize: normalize, seedDemo: seedDemo, render: renderAll, keyOf: keyOf, parseKey: parseKey, todayDate: todayDate,
-    openReader: openReader, openPlayer: openPlayer, openSheet: openSheet, inQuiet: inQuiet, hebDate: hebDate, fileGet: fileGet
+    openReader: openReader, openPlayer: openPlayer, openSheet: openSheet, inQuiet: inQuiet, hebDate: hebDate, fileGet: fileGet,
+    // for feature files (share-app.js)
+    ext: EXT, closeSheet: closeSheet, toast: toast, svg: svg, esc: esc, isNative: isNative, callRaw: callRaw, version: () => APP_VERSION
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

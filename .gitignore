@@ -7,3 +7,6 @@ www/cap-runtime.js
 __pycache__/
 
 !signing/release.jks
+_site/
+.release.json
+.kit/

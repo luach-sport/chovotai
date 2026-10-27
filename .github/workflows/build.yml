@@ -7,10 +7,14 @@ on:
       - 'docs/**'
       - '**.md'
       - 'tools/**'
+      - 'site/**'
+      - 'scripts/site/**'
+      - '.github/workflows/site.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -85,7 +89,7 @@ jobs:
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           "$BT/apksigner" verify --print-certs chovotai.apk | head -5 || true
           "$BT/aapt" dump badging chovotai.apk 2>/dev/null | grep -E "package|sdkVersion|targetSdk|application-label" | head -6 || true
-          unzip -l chovotai.apk | grep -E "assets/public/(index.html|app.js|lib/pdfjs/pdf.min.mjs|lib/pdfjs/pdf.worker.min.mjs|fonts/heebo.ttf|cap-runtime.js)"
+          unzip -l chovotai.apk | grep -E "assets/public/(index.html|app.js|share-app.js|lib/pdfjs/pdf.min.mjs|lib/pdfjs/pdf.worker.min.mjs|fonts/heebo.ttf|cap-runtime.js)"
 
       - name: Keep APK as build artifact
         uses: actions/upload-artifact@v4
@@ -100,8 +104,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${APP_VERSION}"
-          NOTES=$'חובותיי — גרסה '"${APP_VERSION}"$'\n\nלהתקנה: הורידו את chovotai.apk בטלפון ופתחו אותו. בהתקנה הראשונה יש לאשר "התקנה ממקור לא ידוע".\nעדכון: מתקינים את הקובץ החדש מעל הקיים. הנתונים והספרים נשמרים.'
+          WHATS_NEW=""
+          if [ -s release-notes.txt ]; then WHATS_NEW=$'\n\nמה חדש:\n'"$(sed '/^\s*$/d; s/^/• /' release-notes.txt)"; fi
+          NOTES=$'חובותיי — גרסה '"${APP_VERSION}${WHATS_NEW}"$'\n\nלהתקנה: הורידו את chovotai.apk בטלפון ופתחו אותו. בהתקנה הראשונה יש לאשר "התקנה ממקור לא ידוע".\nעדכון: מתקינים את הקובץ החדש מעל הקיים. הנתונים והספרים נשמרים.\nהאתר עם הסבר לכל כפתור: https://luach-sport.github.io/chovotai/'
           gh release create "$TAG" chovotai.apk --title "חובותיי ${APP_VERSION}" --notes "$NOTES" --latest
+
+      - name: Refresh the website (new version number and what's new)
+        if: steps.key.outputs.signed == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run site.yml --ref main -R "${GITHUB_REPOSITORY}"
 
       - name: Missing signing password
         if: steps.key.outputs.signed != 'true'

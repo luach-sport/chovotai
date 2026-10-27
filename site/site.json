@@ -1,0 +1,42 @@
+{
+  "id": "chovotai",
+  "title": "חובותיי – חוק הלימוד היומי שלי",
+  "description": "בוחרים חובות לימוד, מסמנים מה למדתם ומקבלים תזכורות. ספרים ושיעורים נפתחים בדיוק במקום של היום. עובדת לגמרי בלי אינטרנט. מדריך לכל הכפתורים והורדה לאנדרואיד. פותח על ידי Itzko.",
+  "themeColor": "#1E5F74",
+  "icon": "docs/icon-512.png",
+  "fonts": "www/fonts",
+  "appDir": "www",
+  "stamp": {
+    "file": "app.js",
+    "find": "const APP_VERSION = '[^']*';",
+    "with": "const APP_VERSION = '{{VERSION}}';"
+  },
+  "shots": "scripts/site/scenes.mjs",
+  "css": [
+    "brand.css"
+  ],
+  "creditText": "חובותיי היא אפליקציה עצמאית של Itzko: בלי פרסומות, בלי הרשמה ובלי אינטרנט. החובות, הסימונים והספרים נשארים רק אצלכם בטלפון.",
+  "footerNote": "החובות, הספר והשיעורים בצילומי המסך הם לדוגמה. התמונה של ההתראות היא איור להמחשה.",
+  "parts": [
+    "hero",
+    "WHATS_NEW",
+    "offline",
+    "install",
+    "tabs",
+    "ch-first",
+    "ch-home",
+    "ch-ob",
+    "ch-edit",
+    "ch-reader",
+    "ch-player",
+    "ch-library",
+    "ch-progress",
+    "ch-reminders",
+    "ch-settings",
+    "ch-share",
+    "ch-updates",
+    "kit:share-band",
+    "kit:credit",
+    "kit:footer"
+  ]
+}
