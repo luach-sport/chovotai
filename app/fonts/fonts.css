@@ -1,0 +1,15 @@
+/* Bundled fonts (offline). Variable weight files from Google Fonts, SIL Open Font License. */
+@font-face {
+  font-family: 'Heebo';
+  src: url(./heebo.ttf) format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Frank Ruhl Libre';
+  src: url(./frank.ttf) format('truetype');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
