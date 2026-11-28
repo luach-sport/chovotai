@@ -1,0 +1,59 @@
+/* חובותיי's colours and fonts on top of the shared Itzko kit: the app's "paper" look, deep teal and gold,
+   Heebo for text and Frank Ruhl Libre for headings (both bundled in www/fonts). */
+@font-face {
+  font-family: 'Heebo';
+  src: url('../fonts/heebo.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Frank Ruhl Libre';
+  src: url('../fonts/frank.ttf') format('truetype');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --bg: #F5F0E6;
+  --surface: #FFFDF8;
+  --inset: #EEE7D8;
+  --line: #E4DAC7;
+  --ink: #1D2433;
+  --muted: #545B6B;
+  --primary: #1E5F74;
+  --primary-text: #1E5F74;
+  --primary-soft: #E3EEF0;
+  --on-primary: #FFFFFF;
+  --hero: #1E5F74;
+  --hero-ink: #FFFFFF;
+  --hero-muted: #D5E8EE;
+  --hero-btn-ink: #1E5F74;
+  --gold-text: #8A6214;
+  --gold-soft: #F6EBD3;
+  --maker-accent: #1E5F74;
+  --credit-accent: #E2B65C;
+  --credit-mono: #1E5F74;
+  --credit-mono-ink: #FFFFFF;
+  --credit-glow: rgba(176, 126, 34, 0.25);
+  --frame: #1D2433;
+  --shadow: 0 18px 40px -18px rgba(30, 95, 116, 0.4);
+  --font: 'Heebo', 'Segoe UI', 'Arial Hebrew', Arial, sans-serif;
+  --font-display: 'Frank Ruhl Libre', 'Heebo', serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141A; --surface: #1A1F28; --inset: #222833; --line: #2B3240; --ink: #EEE9DF; --muted: #B5B1A8;
+    --primary: #6DB3C9; --primary-text: #8CC6D8; --primary-soft: #1C2D35; --on-primary: #0E1A20; --hero: #174B5C;
+    --gold-text: #E2B65C; --gold-soft: #33290F; --frame: #2B3240; --shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141A; --surface: #1A1F28; --inset: #222833; --line: #2B3240; --ink: #EEE9DF; --muted: #B5B1A8;
+  --primary: #6DB3C9; --primary-text: #8CC6D8; --primary-soft: #1C2D35; --on-primary: #0E1A20; --hero: #174B5C;
+  --gold-text: #E2B65C; --gold-soft: #33290F; --frame: #2B3240; --shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+}
+.chapter-head .tile.gold { background: var(--gold-soft); color: var(--gold-text); }
+.key.gold { color: var(--gold-text); background: var(--gold-soft); }
+.ask { background: var(--gold-soft); }
+.brand .slogan { font-family: var(--font-display); font-weight: 700; }
